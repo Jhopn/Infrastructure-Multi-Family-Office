@@ -2,25 +2,44 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../../connection/prisma';
 import { z } from 'zod';
 import { createClientSchema, updateClientSchema } from './dto/client.dto';
+import * as bcrypt from 'bcryptjs';
+import { randomInt } from 'crypto';
 
-export const createClient = async (request: FastifyRequest<{ Body: z.infer<typeof createClientSchema>}>, reply: FastifyReply) => {
+export const createClient = async (request: FastifyRequest<{ Body: z.infer<typeof createClientSchema> }>, reply: FastifyReply) => {
     try {
-        const client = await prisma.client.create({
-            data: {
-                email: request.body.email,
-                password: request.body.password,
-                role: "user",
-                name: request.body.name,
-                age: request.body.age,
-                status: true,
-                familyProfile: request.body.familyProfile
+        const checkEmail = await prisma.client.findUnique({
+            where: {
+                email: request.body.email
             }
         });
 
-        return reply.code(201).send(client);
-    } catch (error) {
-        return reply.code(400).send({ error: 'Erro ao criar cliente.' });
-    }
+        if (checkEmail)
+            return reply.code(400).send('Existing email');
+
+        const randomSalt = randomInt(10, 16);
+        const hashPassword = await bcrypt.hash(request.body.password, randomSalt);
+
+        const client = await prisma.client.create({
+            data: {
+                ...request.body,
+                password: hashPassword,
+                ClientAccess: {
+                    create: {
+                        Access: {
+                            connect: {
+                                name: 'User',
+                            },
+                        },
+                    },
+                },
+            },
+        }
+    );
+
+    return reply.code(201).send(client);
+} catch (error) {
+    return reply.code(400).send({ error: 'Erro ao criar cliente.' });
+}
 };
 
 export const getClientById = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {

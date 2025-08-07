@@ -1,7 +1,5 @@
 import { z } from "zod"
 
-export const RoleEnum = z.enum(["user", "admin"])
-
 export const FamilyProfileEnum = z.enum([
   "conservative",
   "moderate",

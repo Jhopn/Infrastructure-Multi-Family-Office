@@ -1,8 +1,8 @@
 -- CreateEnum
-CREATE TYPE "public"."Role" AS ENUM ('user', 'admin');
+CREATE TYPE "public"."Frequency" AS ENUM ('single', 'monthly', 'annual');
 
 -- CreateEnum
-CREATE TYPE "public"."Frequency" AS ENUM ('single', 'monthly', 'annual');
+CREATE TYPE "public"."FamilyProfile" AS ENUM ('conservative', 'moderate', 'aggressive', 'very_aggressive');
 
 -- CreateTable
 CREATE TABLE "public"."Client" (
@@ -10,10 +10,9 @@ CREATE TABLE "public"."Client" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "role" "public"."Role" NOT NULL,
     "age" INTEGER NOT NULL,
     "status" BOOLEAN NOT NULL,
-    "familyProfile" TEXT NOT NULL,
+    "familyProfile" "public"."FamilyProfile" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -132,11 +131,35 @@ CREATE TABLE "public"."NetWorthSnapshot" (
     CONSTRAINT "NetWorthSnapshot_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "public"."ClientAccess" (
+    "id" TEXT NOT NULL,
+    "clientId" TEXT,
+    "accessId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ClientAccess_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Access" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Access_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Client_email_key" ON "public"."Client"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "RetirementProfile_clientId_key" ON "public"."RetirementProfile"("clientId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Access_name_key" ON "public"."Access"("name");
 
 -- AddForeignKey
 ALTER TABLE "public"."Goal" ADD CONSTRAINT "Goal_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "public"."Client"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -164,3 +187,9 @@ ALTER TABLE "public"."Insurance" ADD CONSTRAINT "Insurance_clientId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "public"."NetWorthSnapshot" ADD CONSTRAINT "NetWorthSnapshot_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "public"."Client"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."ClientAccess" ADD CONSTRAINT "ClientAccess_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "public"."Client"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."ClientAccess" ADD CONSTRAINT "ClientAccess_accessId_fkey" FOREIGN KEY ("accessId") REFERENCES "public"."Access"("id") ON DELETE SET NULL ON UPDATE CASCADE;

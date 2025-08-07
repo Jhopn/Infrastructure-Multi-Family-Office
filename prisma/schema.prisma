@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  user
-  admin
-}
-
 enum Frequency {
   single
   monthly
@@ -25,40 +20,39 @@ enum FamilyProfile {
   very_aggressive
 }
 
-
 model Client {
-  id            String   @id @default(uuid())
+  id            String        @id @default(uuid())
   name          String
-  email         String   @unique
-  password String
-  role         Role
+  email         String        @unique
+  password      String
   age           Int
   status        Boolean
-  familyProfile  FamilyProfile
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  familyProfile FamilyProfile
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  goals         Goal[]
-  wallets       Wallet[]
-  idealWallets  IdealWallet[]
-  simulations   Simulation[]
-  events        Event[]
-  insurances    Insurance[]
-  retirement    RetirementProfile?
-  netWorths     NetWorthSnapshot[]
+  ClientAccess ClientAccess[]
+  goals        Goal[]
+  wallets      Wallet[]
+  idealWallets IdealWallet[]
+  simulations  Simulation[]
+  events       Event[]
+  insurances   Insurance[]
+  retirement   RetirementProfile?
+  netWorths    NetWorthSnapshot[]
 }
 
 model Goal {
-  id           String   @id @default(uuid())
-  clientId     String
-  type         String
-  subtype      String?
-  targetValue  Float
-  targetDate   DateTime
-  version      Int
-  createdAt    DateTime @default(now())
+  id          String   @id @default(uuid())
+  clientId    String
+  type        String
+  subtype     String?
+  targetValue Float
+  targetDate  DateTime
+  version     Int
+  createdAt   DateTime @default(now())
 
-  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model Wallet {
@@ -73,55 +67,55 @@ model Wallet {
   liquidityDays Int?
   createdAt     DateTime @default(now())
 
-  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model IdealWallet {
-  id           String   @id @default(uuid())
-  clientId     String
-  assetClass   String
-  targetPct    Float
-  createdAt    DateTime @default(now())
+  id         String   @id @default(uuid())
+  clientId   String
+  assetClass String
+  targetPct  Float
+  createdAt  DateTime @default(now())
 
-  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model RetirementProfile {
-  id                   String   @id @default(uuid())
-  clientId             String   @unique
-  desiredIncome        Float
-  expectedReturn       Float
-  pgblContribution     Float
-  retirementAge        Int?
-  currentContribution  Float?
-  createdAt            DateTime @default(now())
+  id                  String   @id @default(uuid())
+  clientId            String   @unique
+  desiredIncome       Float
+  expectedReturn      Float
+  pgblContribution    Float
+  retirementAge       Int?
+  currentContribution Float?
+  createdAt           DateTime @default(now())
 
-  client               Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model Simulation {
-  id            String   @id @default(uuid())
-  clientId      String
-  label         String
-  rate          Float
-  startDate     DateTime
-  createdAt     DateTime @default(now())
+  id        String   @id @default(uuid())
+  clientId  String
+  label     String
+  rate      Float
+  startDate DateTime
+  createdAt DateTime @default(now())
 
-  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  dataPoints    SimulationData[]
+  client     Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dataPoints SimulationData[]
 }
 
 model SimulationData {
-  id             String   @id @default(uuid())
+  id             String @id @default(uuid())
   simulationId   String
   year           Int
   projectedValue Float
 
-  simulation     Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  simulation Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
 }
 
 model Event {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   clientId    String
   type        String
   value       Float
@@ -130,7 +124,7 @@ model Event {
   startDate   DateTime
   endDate     DateTime?
 
-  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model Insurance {
@@ -140,14 +134,32 @@ model Insurance {
   coverageAmount Float
   createdAt      DateTime @default(now())
 
-  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model NetWorthSnapshot {
-  id         String   @id @default(uuid())
-  clientId   String
-  value      Float
-  date       DateTime
+  id       String   @id @default(uuid())
+  clientId String
+  value    Float
+  date     DateTime
 
-  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model ClientAccess {
+  id        String   @id @default(uuid())
+  Client    Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId  String?
+  Access    Access?  @relation(fields: [accessId], references: [id])
+  accessId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Access {
+  id         String         @id @default(uuid())
+  name       String         @unique
+  clientAccess ClientAccess[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 }
