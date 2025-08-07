@@ -4,6 +4,7 @@ import { validatorCompiler, serializerCompiler, type ZodTypeProvider, jsonSchema
 import { fastifySwagger } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import { ClientRoutes } from './routes/client-routes/client-routes';
+import { SessionRoutes } from './routes/auth-routes/auth-routes';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -31,6 +32,7 @@ app.register(fastifyCors, {
 });
 
 app.register(ClientRoutes);
+app.register(SessionRoutes);
 
 app.get('/', async (request, reply) => {
     return { message: 'Hello, world!' };
