@@ -8,82 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  passwordHash String
-  role         Role
-  createdAt    DateTime @default(now())
-}
-
 enum Role {
   user
   admin
-}
-
-model Client {
-  id            Int      @id @default(autoincrement())
-  name          String
-  email         String   @unique
-  age           Int
-  status        Boolean
-  familyProfile String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  goals       Goal[]
-  wallets     Wallet[]
-  simulations Simulation[]
-  events      Event[]
-  insurances  Insurance[]
-}
-
-model Goal {
-  id          Int      @id @default(autoincrement())
-  clientId    Int
-  type        String
-  targetValue Float
-  targetDate  DateTime
-  createdAt   DateTime @default(now())
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-}
-
-model Wallet {
-  id         Int      @id @default(autoincrement())
-  clientId   Int
-  totalValue Float
-  assetClass String
-  percentage Float
-  createdAt  DateTime @default(now())
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-}
-
-model Simulation {
-  id        Int      @id @default(autoincrement())
-  clientId  Int
-  rate      Float
-  startDate DateTime
-  createdAt DateTime @default(now())
-  client     Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  dataPoints SimulationData[]
-}
-
-model SimulationData {
-  id             Int   @id @default(autoincrement())
-  simulationId   Int
-  year           Int
-  projectedValue Float
-  simulation Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
-}
-
-model Event {
-  id        Int       @id @default(autoincrement())
-  clientId  Int
-  type      String
-  value     Float
-  frequency Frequency
-  startDate DateTime
-  endDate   DateTime?
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 enum Frequency {
@@ -92,11 +19,128 @@ enum Frequency {
   annual
 }
 
+model Client {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password String
+  role         Role
+  age           Int
+  status        Boolean
+  familyProfile String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  goals         Goal[]
+  wallets       Wallet[]
+  idealWallets  IdealWallet[]
+  simulations   Simulation[]
+  events        Event[]
+  insurances    Insurance[]
+  retirement    RetirementProfile?
+  netWorths     NetWorthSnapshot[]
+}
+
+model Goal {
+  id           String   @id @default(uuid())
+  clientId     String
+  type         String
+  subtype      String?
+  targetValue  Float
+  targetDate   DateTime
+  version      Int
+  createdAt    DateTime @default(now())
+
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id            String   @id @default(uuid())
+  clientId      String
+  totalValue    Float
+  assetClass    String
+  percentage    Float
+  category      String
+  indexer       String?
+  custodian     String?
+  liquidityDays Int?
+  createdAt     DateTime @default(now())
+
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model IdealWallet {
+  id           String   @id @default(uuid())
+  clientId     String
+  assetClass   String
+  targetPct    Float
+  createdAt    DateTime @default(now())
+
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model RetirementProfile {
+  id                   String   @id @default(uuid())
+  clientId             String   @unique
+  desiredIncome        Float
+  expectedReturn       Float
+  pgblContribution     Float
+  retirementAge        Int?
+  currentContribution  Float?
+  createdAt            DateTime @default(now())
+
+  client               Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Simulation {
+  id            String   @id @default(uuid())
+  clientId      String
+  label         String
+  rate          Float
+  startDate     DateTime
+  createdAt     DateTime @default(now())
+
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dataPoints    SimulationData[]
+}
+
+model SimulationData {
+  id             String   @id @default(uuid())
+  simulationId   String
+  year           Int
+  projectedValue Float
+
+  simulation     Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  clientId    String
+  type        String
+  value       Float
+  frequency   Frequency
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
 model Insurance {
-  id             Int      @id @default(autoincrement())
-  clientId       Int
+  id             String   @id @default(uuid())
+  clientId       String
   type           String
   coverageAmount Float
   createdAt      DateTime @default(now())
+
   client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model NetWorthSnapshot {
+  id         String   @id @default(uuid())
+  clientId   String
+  value      Float
+  date       DateTime
+
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
