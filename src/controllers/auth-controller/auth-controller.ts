@@ -5,7 +5,6 @@ import bcrypt from 'bcryptjs';
 import { sessionSchema } from './dto/auth.dto';
 import z from 'zod';
 
-
 export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof sessionSchema> }>, reply: FastifyReply) => {
   try {
     const { email, password } = request.body;
@@ -18,14 +17,14 @@ export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof
 
     if (!user) {
       return reply.code(401).send({
-        message: 'Autenticação falhou, usuário não encontrado.',
+        message: 'Authentication failed, user not found.',
       });
     }
 
     const passwordCorrect = await bcrypt.compare(password, user.password);
     if (!passwordCorrect) {
       return reply.status(401).send({
-        message: 'Senha incorreta',
+        message: 'Incorrect password',
       });
     }
 
@@ -48,7 +47,7 @@ export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof
     });
   } catch (error) {
     return reply.status(401).send({
-      message: 'Falha de autenticação.',
+      message: 'Authentication failure.',
       success: false,
     });
   }
