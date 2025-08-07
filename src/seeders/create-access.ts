@@ -10,16 +10,16 @@ async function createAccessRoles() {
       });
 
       if (existingRole) {
-        console.log(`🔁 Access role '${roleName}' already exists.`);
+        console.log(`Access role '${roleName}' already exists.`);
       } else {
         await prisma.access.create({
           data: { name: roleName },
         });
-        console.log(`✅ Access role '${roleName}' created successfully!`);
+        console.log(`Access role '${roleName}' created successfully!`);
       }
     }
   } catch (error) {
-    console.error("❌ Error creating access roles:", error);
+    console.error("Error creating access roles:", error);
   } finally {
     await prisma.$disconnect();
   }

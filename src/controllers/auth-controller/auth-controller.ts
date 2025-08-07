@@ -1,4 +1,4 @@
-import { prisma } from 'connection/prisma'; 
+import { prisma } from 'connection/prisma';
 import jwt from 'jsonwebtoken';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcryptjs';
@@ -9,31 +9,31 @@ export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof
   try {
     const { email, password } = request.body;
 
-    const user = await prisma.client.findUnique({
+    const client = await prisma.client.findUnique({
       where: {
         email: email,
       },
     });
 
-    if (!user) {
+    if (!client) {
       return reply.code(401).send({
-        message: 'Authentication failed, user not found.',
+        message: 'Authentication failed, client not found.',
       });
     }
 
-    const passwordCorrect = await bcrypt.compare(password, user.password);
+    const passwordCorrect = await bcrypt.compare(password, client.password);
     if (!passwordCorrect) {
       return reply.status(401).send({
         message: 'Incorrect password',
       });
     }
 
-    const { id } = user;
+    const { id } = client;
 
     const jwtToken = jwt.sign(
       {
-        email: user.email,
-        userId: user.id,
+        email: client.email,
+        clientId: client.id,
       },
       process.env.JWT_SECRET as string,
       {

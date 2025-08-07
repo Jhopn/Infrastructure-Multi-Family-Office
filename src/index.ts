@@ -18,6 +18,11 @@ app.register(fastifySwagger, {
             description: 'API documentation for the Multi Family Office application',
             version: '1.0.0',
         },
+        components: {
+            securitySchemes: {
+                bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
+            }
+        }
     },
     transform: jsonSchemaTransform,
 })
