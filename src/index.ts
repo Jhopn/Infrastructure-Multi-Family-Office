@@ -1,8 +1,23 @@
 import fastify from 'fastify';
 import { fastifyCors } from '@fastify/cors';
-
+import { fastifySwagger } from '@fastify/swagger';
+import { fastifySwaggerUi } from '@fastify/swagger-ui';
 
 const app = fastify();
+
+app.register(fastifySwagger, {
+    openapi: {
+        info: {
+            title: 'Multi Family Office API',
+            description: 'API documentation for the Multi Family Office application',
+            version: '1.0.0',
+        },
+    },
+})
+
+app.register(fastifySwaggerUi, {
+    routePrefix: '/docs'
+})
 
 app.register(fastifyCors, {
     origin: '*',
