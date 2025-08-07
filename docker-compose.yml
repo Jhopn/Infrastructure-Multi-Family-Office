@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_multi_family_office
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: mfo_db
+    ports:
+      - "5430:5432"
+    volumes:
+      - postgres_data_mfo:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_mfo:
