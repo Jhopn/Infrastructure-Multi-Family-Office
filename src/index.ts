@@ -1,14 +1,14 @@
 import fastify from 'fastify';
 import { fastifyCors } from '@fastify/cors';
-import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
+import { validatorCompiler, serializerCompiler, type ZodTypeProvider, jsonSchemaTransform } from 'fastify-type-provider-zod';
 import { fastifySwagger } from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
+import { ClientRoutes } from './routes/client-routes/client-routes';
 
-const app = fastify();
+const app = fastify().withTypeProvider<ZodTypeProvider>();
 
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
-
 
 app.register(fastifySwagger, {
     openapi: {
@@ -18,6 +18,7 @@ app.register(fastifySwagger, {
             version: '1.0.0',
         },
     },
+    transform: jsonSchemaTransform,
 })
 
 app.register(fastifySwaggerUi, {
@@ -29,9 +30,12 @@ app.register(fastifyCors, {
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
 });
 
+app.register(ClientRoutes);
+
 app.get('/', async (request, reply) => {
     return { message: 'Hello, world!' };
 });
+
 
 app.listen({ port: 3000 }, (err, address) => {
     console.log(`Server is running at ${address} 🚀`);
