@@ -74,10 +74,16 @@ export const updateClient = async (request: FastifyRequest<{ Params: { id: strin
     const { id } = request.params;
 
     try {
+        if (request.body.password){
+             const randomSalt = randomInt(10, 16);
+             request.body.password = await bcrypt.hash(request.body.password, randomSalt);
+        }
+
         const updatedClient = await prisma.client.update({
             where: { id },
-            data: request.body
+            data: request.body,
         });
+
 
         return reply.send(updatedClient);
     } catch (error) {
