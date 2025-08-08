@@ -14,9 +14,9 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, createClient);
 
     fastify.get('/clients/:id', {
+        preHandler: authAccess(["User"]),
         schema: {
             description: 'Get client by ID',
-            preHandler: authAccess(["User"]),
             tags: ['Clients'],
             params: uuidParamSchema,
             security: [{ bearerAuth: [] }]
@@ -33,10 +33,10 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, getAllClients);
 
     fastify.patch('/clients/:id', {
+        preHandler: authAccess(["User"]),
         schema: {
             description: 'Update client by ID',
             tags: ['Clients'],
-            preHandler: authAccess(["User"]),
             params: uuidParamSchema,
             body: updateClientSchema,
             security: [{ bearerAuth: [] }]
@@ -44,10 +44,10 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, updateClient);
 
     fastify.delete('/clients/:id', {
+        preHandler: authAccess(["User"]),
         schema: {
             description: 'Delete client by ID',
             tags: ['Clients'],
-            preHandler: authAccess(["User"]),
             params: uuidParamSchema,
             security: [{ bearerAuth: [] }]
         }
