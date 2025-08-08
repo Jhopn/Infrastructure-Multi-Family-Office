@@ -2,7 +2,6 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { prisma } from "../connection/prisma";
 
 interface DecodedToken extends JwtPayload {
-  userId: string;
   clientId?: string;
 }
 
@@ -18,7 +17,7 @@ export function authAccess(permissions?: string[]) {
       const token = authHeader.replace("Bearer ", "");
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string) as DecodedToken;
 
-      request.userData = { id: decodedToken.userId };
+      request.clientData = { id: decodedToken.clientId };
 
       if (permissions && permissions.length > 0) {
         const client = await prisma.client.findUnique({
@@ -39,7 +38,7 @@ export function authAccess(permissions?: string[]) {
         });
 
         if (!client) {
-          return reply.code(403).send({ message: "User not found." });
+          return reply.code(403).send({ message: "Client not found." });
         }
 
         const userPermissions = client.ClientAccess.map((ca) => ca.Access?.name) ?? [];
@@ -52,7 +51,7 @@ export function authAccess(permissions?: string[]) {
           return reply.code(403).send({ message: "Permission denied." });
         }
       }
-      
+
       return;
     } catch (error) {
       return reply.code(401).send({ msg: "Authentication failed, invalid token!" });
