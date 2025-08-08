@@ -6,6 +6,7 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import { ClientRoutes } from './routes/client-routes/client-routes';
 import { SessionRoutes } from './routes/auth-routes/auth-routes';
 import { GoalRoutes } from 'routes/goal-routes/goal-routes';
+import { WalletRoutes } from 'routes/wallet-routes/wallet-routes';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -34,17 +35,13 @@ app.register(fastifySwaggerUi, {
 
 app.register(fastifyCors, {
     origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 });
 
 app.register(ClientRoutes);
 app.register(SessionRoutes);
 app.register(GoalRoutes);
-
-app.get('/', async (request, reply) => {
-    return { message: 'Hello, world!' };
-});
-
+app.register(WalletRoutes);
 
 app.listen({ port: 3000 }, (err, address) => {
     console.log(`Server is running at ${address} 🚀`);
