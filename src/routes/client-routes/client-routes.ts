@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { createClient, getClientById, getAllClients, updateClient, deleteClient } from '../../controllers/client-controller/client-controllers';
 import { createClientSchema, updateClientSchema } from '../../controllers/client-controller/dto/client.dto';
-import { uuidParamSchema } from 'controllers/common/dto/param.dto';
+import { uuidParamSchema } from 'common/dto/param.dto';
 import { authAccess } from 'middlewares/auth-middleware';
 
 const ClientRoutes: FastifyPluginAsync = async (fastify) => {
