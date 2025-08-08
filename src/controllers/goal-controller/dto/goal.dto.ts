@@ -15,14 +15,5 @@ export const createGoalSchema = z.object({
     }),
 })
 
-export const updateGoalSchema = z.object({
-  type: z.string().optional(),
-  subtype: z.string().optional(),
-  targetValue: z.number().optional(),
-  targetDate: z.coerce.date().optional(),
-  version: z.number()
-    .int("version must be an integer, no decimals allowed.")
-    .refine(val => val >= INT32_MIN && val <= INT32_MAX, {
-      message: `version must be between ${INT32_MIN} and ${INT32_MAX}, don't break the database.`,
-    }).optional(),
-})
+export const updateGoalSchema = createGoalSchema.partial();
+
