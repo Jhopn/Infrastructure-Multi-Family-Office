@@ -7,6 +7,8 @@ import { ClientRoutes } from './routes/client-routes/client-routes';
 import { SessionRoutes } from './routes/auth-routes/auth-routes';
 import { GoalRoutes } from 'routes/goal-routes/goal-routes';
 import { WalletRoutes } from 'routes/wallet-routes/wallet-routes';
+import { IdealWalletRoutes } from 'routes/ideal-wallet-routes/ideal-wallet-routes';
+import { InsuranceRoutes } from 'routes/insurance-routes/insurance-routes';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -42,6 +44,8 @@ app.register(ClientRoutes);
 app.register(SessionRoutes);
 app.register(GoalRoutes);
 app.register(WalletRoutes);
+app.register(IdealWalletRoutes);
+app.register(InsuranceRoutes);
 
 app.listen({ port: 3000 }, (err, address) => {
     console.log(`Server is running at ${address} 🚀`);
