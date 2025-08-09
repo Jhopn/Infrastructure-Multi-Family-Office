@@ -10,6 +10,7 @@ import { WalletRoutes } from 'routes/wallet-routes/wallet-routes';
 import { IdealWalletRoutes } from 'routes/ideal-wallet-routes/ideal-wallet-routes';
 import { InsuranceRoutes } from 'routes/insurance-routes/insurance-routes';
 import { RetirementProfileRoutes } from 'routes/retirement-profile-routes/retirement-profile-routes';
+import { NetWorthRoutes } from 'routes/net-worth-routes/net-worth-routes';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -48,6 +49,7 @@ app.register(WalletRoutes);
 app.register(IdealWalletRoutes);
 app.register(InsuranceRoutes);
 app.register(RetirementProfileRoutes);
+app.register(NetWorthRoutes);
 
 app.listen({ port: 3000 }, (err, address) => {
     console.log(`Server is running at ${address} 🚀`);
