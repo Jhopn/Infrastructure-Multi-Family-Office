@@ -1,5 +1,7 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
-import { prisma } from "../connection/prisma";
+import type { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+
+import { prisma } from '../connection/prisma';
 
 interface DecodedToken extends JwtPayload {
   clientId?: string;
@@ -11,11 +13,16 @@ export function authAccess(permissions?: string[]) {
       const authHeader = request.headers.authorization;
 
       if (!authHeader) {
-        return reply.code(401).send({ msg: "Authentication failed, token missing!" });
+        return reply
+          .code(401)
+          .send({ msg: 'Authentication failed, token missing!' });
       }
 
-      const token = authHeader.replace("Bearer ", "");
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string) as DecodedToken;
+      const token = authHeader.replace('Bearer ', '');
+      const decodedToken = jwt.verify(
+        token,
+        process.env.JWT_SECRET as string,
+      ) as DecodedToken;
 
       request.clientData = { id: decodedToken.clientId };
 
@@ -38,23 +45,26 @@ export function authAccess(permissions?: string[]) {
         });
 
         if (!client) {
-          return reply.code(403).send({ message: "Client not found." });
+          return reply.code(403).send({ message: 'Client not found.' });
         }
 
-        const userPermissions = client.ClientAccess.map((ca) => ca.Access?.name) ?? [];
+        const userPermissions =
+          client.ClientAccess.map((ca) => ca.Access?.name) ?? [];
 
         const hasPermission = permissions.some((p) =>
-          userPermissions.includes(p)
+          userPermissions.includes(p),
         );
 
         if (!hasPermission) {
-          return reply.code(403).send({ message: "Permission denied." });
+          return reply.code(403).send({ message: 'Permission denied.' });
         }
       }
 
       return;
     } catch (error) {
-      return reply.code(401).send({ msg: "Authentication failed, invalid token!" });
+      return reply
+        .code(401)
+        .send({ msg: 'Authentication failed, invalid token!' });
     }
   };
 }

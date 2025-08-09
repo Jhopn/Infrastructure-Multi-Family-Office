@@ -2,10 +2,14 @@ import { prisma } from 'connection/prisma';
 import jwt from 'jsonwebtoken';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcryptjs';
-import { sessionSchema } from './dto/auth.dto';
-import z from 'zod';
+import type z from 'zod';
 
-export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof sessionSchema> }>, reply: FastifyReply) => {
+import type { sessionSchema } from './dto/auth.dto';
+
+export const authSession = async (
+  request: FastifyRequest<{ Body: z.infer<typeof sessionSchema> }>,
+  reply: FastifyReply,
+) => {
   try {
     const { email, password } = request.body;
 
@@ -38,7 +42,7 @@ export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof
       process.env.JWT_SECRET as string,
       {
         expiresIn: '1h',
-      }
+      },
     );
 
     return reply.status(200).send({
@@ -49,6 +53,7 @@ export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof
     return reply.status(401).send({
       message: 'Authentication failure.',
       success: false,
+      error,
     });
   }
 };

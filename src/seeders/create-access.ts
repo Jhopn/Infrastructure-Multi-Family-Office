@@ -1,8 +1,7 @@
-import { prisma } from "../connection/prisma";
-
+import { prisma } from 'connection/prisma';
 async function createAccessRoles() {
   try {
-    const roles = ["Admin", "User"];
+    const roles = ['Admin', 'User'];
 
     for (const roleName of roles) {
       const existingRole = await prisma.access.findUnique({
@@ -10,19 +9,19 @@ async function createAccessRoles() {
       });
 
       if (existingRole) {
-        console.log(`Access role '${roleName}' already exists.`);
+        console.warn(`Access role '${roleName}' already exists.`);
       } else {
         await prisma.access.create({
           data: { name: roleName },
         });
-        console.log(`Access role '${roleName}' created successfully!`);
+        console.warn(`Access role '${roleName}' created successfully!`);
       }
     }
   } catch (error) {
-    console.error("Error creating access roles:", error);
+    console.error('Error creating access roles:', error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-createAccessRoles();
+void createAccessRoles();
