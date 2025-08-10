@@ -9,7 +9,8 @@
     "test:coverage": "jest --coverage",
     "build": "tsc -p tsconfig.json",
     "start": "tsx watch ./src/index.ts",
-    "access": "tsx ./src/seeders/create-access.ts"
+    "db:seed:access": "tsx ./src/seeders/create-access.ts",
+    "db:seed:advisor": "tsx ./src/seeders/create-user.ts"
   },
   "author": "Jhoão Pedro - Github(Jhopn)",
   "license": "ISC",
