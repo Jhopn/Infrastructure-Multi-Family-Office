@@ -37,8 +37,8 @@ export default [
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "error",
       "prettier/prettier": [
-        "error",
         {
+          endOfLine: "auto",
           singleQuote: true,
           semi: true,
           trailingComma: "all",

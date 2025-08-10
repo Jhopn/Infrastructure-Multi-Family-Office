@@ -1,19 +1,18 @@
 import { z } from 'zod';
 
-export const FamilyProfileEnum = z.enum([
-  'conservative',
-  'moderate',
-  'aggressive',
-  'very_aggressive',
+const familyProfileEnum = z.enum([
+    'conservative',
+    'moderate',
+    'aggressive',
+    'very_aggressive'
 ]);
 
 export const createClientSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email(),
-  password: z.string(),
-  age: z.number().int().min(0).max(120),
-  status: z.boolean().default(true),
-  familyProfile: FamilyProfileEnum.default('conservative'),
+    name: z.string("Name is required."),
+    email: z.string("Email is required.").email("Invalid email format."),
+    age: z.number("Age is required.").int().positive(),
+    status: z.boolean("Status is required."),
+    familyProfile: familyProfileEnum,
 });
 
 export const updateClientSchema = createClientSchema.partial();

@@ -1,73 +1,52 @@
 import type { FastifyPluginAsync } from 'fastify';
-import {
-  createGoal,
-  getGoals,
-  updateGoal,
-  deleteGoal,
-} from 'controllers/goal-controller/goal-controller';
-import { uuidParamSchema } from 'common/dto/param.dto';
+import { createGoal, getGoals, updateGoal, deleteGoal } from 'controllers/goal-controller/goal-controller';
 import { authAccess } from 'middlewares/auth-middleware';
-import {
-  createGoalSchema,
-  updateGoalSchema,
-} from 'controllers/goal-controller/dto/goal.dto';
+import { createGoalSchema, updateGoalSchema } from 'controllers/goal-controller/dto/goal.dto';
+import { clientIdParamSchema, clientResourceParamsSchema } from 'common/dto/param.dto';
 
 const GoalRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.post(
-    '/goals',
-    {
-      preHandler: authAccess(['User']),
-      schema: {
-        description: 'Create a new goal',
-        tags: ['Goals'],
-        body: createGoalSchema,
-        security: [{ bearerAuth: [] }],
-      },
-    },
-    createGoal,
-  );
 
-  fastify.get(
-    '/goals',
-    {
-      preHandler: authAccess(['User']),
-      schema: {
-        description: 'Get goal by clientId',
-        tags: ['Goals'],
-        security: [{ bearerAuth: [] }],
-      },
-    },
-    getGoals,
-  );
+    fastify.post('/clients/:clientId/goals', {
+        preHandler: authAccess(["advisor"]),
+        schema: {
+            description: 'Create a new goal for a specific client',
+            tags: ['Goals'],
+            params: clientIdParamSchema,
+            body: createGoalSchema,
+            security: [{ bearerAuth: [] }]
+        }
+    }, createGoal);
 
-  fastify.patch(
-    '/goals/:id',
-    {
-      preHandler: authAccess(['User']),
-      schema: {
-        description: 'Update goal by ID',
-        tags: ['Goals'],
-        params: uuidParamSchema,
-        body: updateGoalSchema,
-        security: [{ bearerAuth: [] }],
-      },
-    },
-    updateGoal,
-  );
+    fastify.get('/clients/:clientId/goals', {
+        preHandler: authAccess(["advisor", "viewer"]),
+        schema: {
+            description: 'Get all goals for a specific client',
+            tags: ['Goals'],
+            params: clientIdParamSchema,
+            security: [{ bearerAuth: [] }]
+        }
+    }, getGoals);
 
-  fastify.delete(
-    '/goals/:id',
-    {
-      preHandler: authAccess(['User']),
-      schema: {
-        description: 'Delete goal by ID',
-        tags: ['Goals'],
-        params: uuidParamSchema,
-        security: [{ bearerAuth: [] }],
-      },
-    },
-    deleteGoal,
-  );
+    fastify.patch('/clients/:clientId/goals/:outherId', {
+        preHandler: authAccess(["advisor"]),
+        schema: {
+            description: 'Update a goal by ID for a specific client',
+            tags: ['Goals'],
+            params: clientResourceParamsSchema,
+            body: updateGoalSchema,
+            security: [{ bearerAuth: [] }]
+        },
+    }, updateGoal);
+
+    fastify.delete('/clients/:clientId/goals/:outherId', {
+        preHandler: authAccess(["advisor"]),
+        schema: {
+            description: 'Delete a goal by ID for a specific client',
+            tags: ['Goals'],
+            params: clientResourceParamsSchema,
+            security: [{ bearerAuth: [] }]
+        }
+    }, deleteGoal);
 };
 
 export { GoalRoutes };

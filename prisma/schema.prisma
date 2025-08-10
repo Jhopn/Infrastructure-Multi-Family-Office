@@ -20,18 +20,25 @@ enum FamilyProfile {
   very_aggressive
 }
 
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  UserAccess UserAccess[]
+}
+
 model Client {
   id            String        @id @default(uuid())
   name          String
   email         String        @unique
-  password      String
   age           Int
   status        Boolean
   familyProfile FamilyProfile
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  ClientAccess ClientAccess[]
   goals        Goal[]
   wallets      Wallet[]
   idealWallets IdealWallet[]
@@ -146,10 +153,10 @@ model NetWorthSnapshot {
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
-model ClientAccess {
+model UserAccess {
   id        String   @id @default(uuid())
-  Client    Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId  String?
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
   Access    Access?  @relation(fields: [accessId], references: [id])
   accessId  String?
   createdAt DateTime @default(now())
@@ -157,9 +164,9 @@ model ClientAccess {
 }
 
 model Access {
-  id         String         @id @default(uuid())
-  name       String         @unique
-  clientAccess ClientAccess[]
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  id         String       @id @default(uuid())
+  name       String       @unique
+  UserAccess UserAccess[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 }
