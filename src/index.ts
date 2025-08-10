@@ -16,9 +16,9 @@ import { RetirementProfileRoutes } from 'routes/retirement-profile-routes/retire
 import { NetWorthRoutes } from 'routes/net-worth-routes/net-worth-routes';
 import { SimulationRoutes } from 'routes/simulation-routes/simulation-routes';
 import { EventRoutes } from 'routes/event-routes/event-routes';
-
 import { SessionRoutes } from './routes/auth-routes/auth-routes';
 import { ClientRoutes } from './routes/client-routes/client-routes';
+import { UserRoutes } from 'routes/user-routes/user-routes';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -60,6 +60,7 @@ app.register(RetirementProfileRoutes);
 app.register(NetWorthRoutes);
 app.register(SimulationRoutes);
 app.register(EventRoutes);
+app.register(UserRoutes);
 
 app.listen({ port: 3000 }, (err, address) => {
   console.log(`Server is running at ${address} 🚀`);

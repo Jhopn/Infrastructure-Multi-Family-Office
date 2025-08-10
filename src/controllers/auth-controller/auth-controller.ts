@@ -3,53 +3,53 @@ import jwt from 'jsonwebtoken';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import bcrypt from 'bcryptjs';
 import type z from 'zod';
-
 import type { sessionSchema } from './dto/auth.dto';
 
-export const authSession = async (
-  request: FastifyRequest<{ Body: z.infer<typeof sessionSchema> }>,
-  reply: FastifyReply,
-) => {
+export const authSession = async (request: FastifyRequest<{ Body: z.infer<typeof sessionSchema> }>, reply: FastifyReply) => {
   try {
     const { email, password } = request.body;
 
-    const client = await prisma.client.findUnique({
-      where: {
-        email: email,
-      },
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        UserAccess: {
+          include: {
+            Access: true
+          }
+        }
+      }
     });
 
-    if (!client) {
-      return reply.code(401).send({
-        message: 'Authentication failed, client not found.',
-      });
+    if (!user) {
+      return reply.code(401).send({ message: 'Authentication failed, user not found.' });
     }
 
-    const passwordCorrect = await bcrypt.compare(password, client.password);
-    if (!passwordCorrect) {
-      return reply.status(401).send({
-        message: 'Incorrect password',
-      });
+    const isPasswordCorrect = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordCorrect) {
+      return reply.status(401).send({ message: 'Incorrect password' });
     }
 
-    const { id } = client;
+    const roles = user.UserAccess.map(ua => ua.Access?.name).filter(Boolean) as string[];
 
-    const jwtToken = jwt.sign(
+    const token = jwt.sign(
       {
-        email: client.email,
-        clientId: client.id,
+        id: user.id,
+        email: user.email,
+        roles: roles
       },
       process.env.JWT_SECRET as string,
       {
-        expiresIn: '1h',
+        expiresIn: '8h',
       },
     );
 
     return reply.status(200).send({
-      userId: id,
-      token: jwtToken,
+      userId: user.id,
+      token: token,
     });
+
   } catch (error) {
+    console.error("Error during login:", error);
     return reply.status(401).send({
       message: 'Authentication failure.',
       success: false,
