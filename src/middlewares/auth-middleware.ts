@@ -4,7 +4,9 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../connection/prisma';
 
 interface DecodedToken extends JwtPayload {
-  clientId?: string;
+  id: string;
+  email: string;
+  roles: string[];
 }
 
 export function authAccess(permissions?: string[]) {
@@ -24,15 +26,15 @@ export function authAccess(permissions?: string[]) {
         process.env.JWT_SECRET as string,
       ) as DecodedToken;
 
-      request.clientData = { id: decodedToken.clientId };
+      request.clientData = { id: decodedToken.id, email: decodedToken.email, roles: decodedToken.roles};
 
       if (permissions && permissions.length > 0) {
-        const client = await prisma.client.findUnique({
+        const user = await prisma.user.findUnique({
           where: {
-            id: decodedToken.clientId,
+            id: decodedToken.id,
           },
           include: {
-            ClientAccess: {
+            UserAccess: {
               select: {
                 Access: {
                   select: {
@@ -44,12 +46,11 @@ export function authAccess(permissions?: string[]) {
           },
         });
 
-        if (!client) {
-          return reply.code(403).send({ message: 'Client not found.' });
+        if (!user) {
+          return reply.code(403).send({ message: 'User not found.' });
         }
 
-        const userPermissions =
-          client.ClientAccess.map((ca) => ca.Access?.name) ?? [];
+        const userPermissions = user.UserAccess.map((ca) => ca.Access?.name) ?? [];
 
         const hasPermission = permissions.some((p) =>
           userPermissions.includes(p),
