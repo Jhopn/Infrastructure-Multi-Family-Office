@@ -3,6 +3,7 @@ import { prisma } from '../../connection/prisma';
 import { z } from 'zod';
 import { createClientSchema, updateClientSchema } from "./dto/client.dto";
 import { uuidParamSchema } from "common/dto/param.dto";
+import { paginationSchema } from "common/dto/pagination.dto";
 
 export const createClient = async (request: FastifyRequest<{ Body: z.infer<typeof createClientSchema> }>, reply: FastifyReply) => {
     try {
@@ -150,6 +151,44 @@ export const getClientsPlanningSummary = async () => {
   return {
     percentage: Math.round(averageAlignment),
     clientCount
+  }
+}
+export const getClientsTable = async (query: unknown) => {
+  const { page = 1, pageSize = 10 } = paginationSchema.parse(query)
+  const offset = (page - 1) * pageSize
+
+  const [clients, totalItems] = await Promise.all([
+    prisma.client.findMany({
+      skip: offset,
+      take: pageSize,
+      select: {
+        id: true,
+        name: true,
+        netWorths: {
+          orderBy: { date: 'desc' },
+          take: 1,
+          select: { value: true, date: true }
+        }
+      },
+      orderBy: { name: 'asc' }
+    }),
+    prisma.client.count()
+  ])
+
+
+  return {
+    data: clients.map(c => ({
+      id: c.id,
+      name: c.name,
+      patrimony: c.netWorths[0]?.value ?? 0,
+      lastUpdate: c.netWorths[0]?.date ?? null
+    })),
+    meta: {
+      currentPage: page,
+      totalPages: Math.ceil(totalItems / pageSize),
+      itemsPerPage: pageSize,
+      totalItems
+    }
   }
 }
 

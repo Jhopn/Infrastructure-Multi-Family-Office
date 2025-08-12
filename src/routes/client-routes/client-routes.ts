@@ -6,11 +6,13 @@ import {
     updateClient,
     deleteClient,
     getClientsPlanningDistribution,
-    getClientsPlanningSummary
+    getClientsPlanningSummary,
+    getClientsTable
 } from 'controllers/client-controller/client-controllers';
 import { authAccess } from 'middlewares/auth-middleware';
 import { createClientSchema, updateClientSchema } from 'controllers/client-controller/dto/client.dto';
 import { uuidParamSchema } from 'common/dto/param.dto';
+import { paginationSchema } from 'common/dto/pagination.dto';
 
 const ClientRoutes: FastifyPluginAsync = async (fastify) => {
 
@@ -81,6 +83,17 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
             security: [{ bearerAuth: [] }]
         }
     }, getClientsPlanningSummary)
+
+    fastify.get('/clients/table', {
+        preHandler: authAccess(['Admin']),
+        schema: {
+            description: 'Get clients list for planning table with pagination',
+            tags: ['Clients'],
+            querystring: paginationSchema,
+            security: [{ bearerAuth: [] }]
+        }
+    }, getClientsTable)
+
 
 };
 
