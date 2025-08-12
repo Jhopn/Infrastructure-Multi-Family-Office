@@ -62,6 +62,6 @@ app.register(SimulationRoutes);
 app.register(EventRoutes);
 app.register(UserRoutes);
 
-app.listen({ port: 3000 }, (err, address) => {
+app.listen({ port: 4000 }, (err, address) => {
   console.log(`Server is running at ${address} 🚀`);
 });

@@ -4,7 +4,8 @@ import {
     getClients,
     getClientById,
     updateClient,
-    deleteClient
+    deleteClient,
+    getClientsPlanningDistribution
 } from 'controllers/client-controller/client-controllers';
 import { authAccess } from 'middlewares/auth-middleware';
 import { createClientSchema, updateClientSchema } from 'controllers/client-controller/dto/client.dto';
@@ -61,6 +62,16 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
             security: [{ bearerAuth: [] }]
         }
     }, deleteClient);
+
+    fastify.get('/clients/planning-distribution', {
+        preHandler: authAccess(['advisor']),
+        schema: {
+            description: 'Get percentage distribution of clients by planning alignment',
+            tags: ['Clients'],
+            security: [{ bearerAuth: [] }]
+        }
+    }, getClientsPlanningDistribution)
+
 };
 
 export { ClientRoutes };

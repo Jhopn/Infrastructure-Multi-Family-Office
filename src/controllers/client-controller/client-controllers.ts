@@ -77,3 +77,46 @@ export const deleteClient = async (request: FastifyRequest<{ Params: z.infer<typ
         return reply.code(400).send({ error: 'Error deleting client.' });
     }
 };
+
+export const getClientsPlanningDistribution = async () => {
+    const clients = await prisma.client.findMany({
+        select: {
+            wallets: { select: { assetClass: true, percentage: true } },
+            idealWallets: { select: { assetClass: true, targetPct: true } }
+        }
+    })
+
+    let distribution = {
+        above90: 0,
+        between90and70: 0,
+        between70and50: 0,
+        below50: 0
+    }
+
+    clients.forEach(client => {
+        if (client.idealWallets.length === 0) return
+
+        const diffs = client.idealWallets.map(ideal => {
+            const current = client.wallets.find(w => w.assetClass === ideal.assetClass)
+            return Math.abs((current?.percentage ?? 0) - ideal.targetPct)
+        })
+
+        const avgMisalignment = diffs.reduce((a, b) => a + b, 0) / diffs.length
+        const alignmentScore = 100 - avgMisalignment
+
+        if (alignmentScore > 90) distribution.above90++
+        else if (alignmentScore >= 70) distribution.between90and70++
+        else if (alignmentScore >= 50) distribution.between70and50++
+        else distribution.below50++
+    })
+
+    const total = clients.length || 1
+
+    return [
+        { label: 'Superior a 90%', percentage: Math.round((distribution.above90 / total) * 100) },
+        { label: '90% a 70%', percentage: Math.round((distribution.between90and70 / total) * 100) },
+        { label: '70% a 50%', percentage: Math.round((distribution.between70and50 / total) * 100) },
+        { label: 'Inferior a 50%', percentage: Math.round((distribution.below50 / total) * 100) }
+    ]
+}
+
