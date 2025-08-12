@@ -7,7 +7,8 @@ import {
     deleteClient,
     getClientsPlanningDistribution,
     getClientsPlanningSummary,
-    getClientsTable
+    getClientsTable,
+    getFamilyProfileSummary
 } from 'controllers/client-controller/client-controllers';
 import { authAccess } from 'middlewares/auth-middleware';
 import { createClientSchema, updateClientSchema } from 'controllers/client-controller/dto/client.dto';
@@ -46,7 +47,7 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, getClientById);
 
     fastify.patch('/clients/:id', {
-        preHandler: authAccess(["advisor"]),
+        preHandler: authAccess(["advisor", "viewer"]),
         schema: {
             description: 'Update a client by ID',
             tags: ['Clients'],
@@ -57,7 +58,7 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, updateClient);
 
     fastify.delete('/clients/:id', {
-        preHandler: authAccess(["advisor"]),
+        preHandler: authAccess(["advisor", "viewer"]),
         schema: {
             description: 'Delete a client by ID',
             tags: ['Clients'],
@@ -67,7 +68,7 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, deleteClient);
 
     fastify.get('/clients/planning-distribution', {
-        preHandler: authAccess(['advisor']),
+        preHandler: authAccess(["advisor", "viewer"]),
         schema: {
             description: 'Get percentage distribution of clients by planning alignment',
             tags: ['Clients'],
@@ -76,7 +77,7 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, getClientsPlanningDistribution)
 
     fastify.get('/clients/planning-summary', {
-        preHandler: authAccess(['advisor']),
+        preHandler: authAccess(["advisor", "viewer"]),
         schema: {
             description: 'Get summary of clients by planning',
             tags: ['Clients'],
@@ -85,7 +86,7 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
     }, getClientsPlanningSummary)
 
     fastify.get('/clients/table', {
-        preHandler: authAccess(['Admin']),
+        preHandler: authAccess(["advisor", "viewer"]),
         schema: {
             description: 'Get clients list for planning table with pagination',
             tags: ['Clients'],
@@ -94,6 +95,14 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
         }
     }, getClientsTable)
 
+    fastify.get('/clients/family-profile-summary', {
+        preHandler: authAccess(["advisor", "viewer"]),
+        schema: {
+            description: 'Get family profile percentage summary',
+            tags: ['Clients'],
+            security: [{ bearerAuth: [] }]
+        }
+    }, getFamilyProfileSummary)
 
 };
 
