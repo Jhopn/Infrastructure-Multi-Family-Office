@@ -118,5 +118,39 @@ export const getClientsPlanningDistribution = async () => {
         { label: '70% a 50%', percentage: Math.round((distribution.between70and50 / total) * 100) },
         { label: 'Inferior a 50%', percentage: Math.round((distribution.below50 / total) * 100) }
     ]
+};
+
+export const getClientsPlanningSummary = async () => {
+  const clients = await prisma.client.findMany({
+    select: {
+      id: true,
+      wallets: { select: { percentage: true, assetClass: true } },
+      idealWallets: { select: { assetClass: true, targetPct: true } },
+    }
+  })
+
+  let totalAlignment = 0
+  let clientCount = clients.length
+
+  clients.forEach(client => {
+    if (client.idealWallets.length === 0) return 
+
+    const diffs = client.idealWallets.map(ideal => {
+      const current = client.wallets.find(w => w.assetClass === ideal.assetClass)
+      return Math.abs((current?.percentage ?? 0) - ideal.targetPct)
+    })
+
+    const avgMisalignment = diffs.length ? diffs.reduce((a, b) => a + b, 0) / diffs.length : 0
+    const alignmentScore = 100 - avgMisalignment
+    totalAlignment += alignmentScore
+  })
+
+  const averageAlignment = clientCount > 0 ? totalAlignment / clientCount : 0
+
+  return {
+    percentage: Math.round(averageAlignment),
+    clientCount
+  }
 }
+
 
