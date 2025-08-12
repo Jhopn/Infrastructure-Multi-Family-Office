@@ -79,148 +79,161 @@ export const deleteClient = async (request: FastifyRequest<{ Params: z.infer<typ
     }
 };
 
-export const getClientsPlanningDistribution = async () => {
-    const clients = await prisma.client.findMany({
-        select: {
-            wallets: { select: { assetClass: true, percentage: true } },
-            idealWallets: { select: { assetClass: true, targetPct: true } }
-        }
-    })
+export const getClientsTable = async (request: FastifyRequest<{ Querystring: z.infer<typeof paginationSchema> }>, reply: FastifyReply) => {
+    try {
+        const { page = 1, pageSize = 10 } = request.query;
+        const offset = (page - 1) * pageSize;
 
-    let distribution = {
-        above90: 0,
-        between90and70: 0,
-        between70and50: 0,
-        below50: 0
+        const [clients, totalItems] = await prisma.$transaction([
+            prisma.client.findMany({
+                skip: offset,
+                take: pageSize,
+                select: {
+                    id: true,
+                    name: true,
+                    netWorths: {
+                        orderBy: { date: 'desc' },
+                        take: 1,
+                        select: { value: true, date: true }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            }),
+            prisma.client.count()
+        ]);
+
+        const responseData = {
+            data: clients.map(c => ({
+                id: c.id,
+                name: c.name,
+                patrimony: c.netWorths[0]?.value ?? 0,
+                lastUpdate: c.netWorths[0]?.date ?? null
+            })),
+            meta: {
+                currentPage: page,
+                totalPages: Math.ceil(totalItems / pageSize),
+                itemsPerPage: pageSize,
+                totalItems
+            }
+        };
+
+        return reply.code(200).send(responseData);
+    } catch (error) {
+        console.error("Erro ao buscar dados da tabela de clientes:", error);
+        return reply.code(400).send({ message: 'Erro ao buscar dados da tabela de clientes.' });
     }
-
-    clients.forEach(client => {
-        if (client.idealWallets.length === 0) return
-
-        const diffs = client.idealWallets.map(ideal => {
-            const current = client.wallets.find(w => w.assetClass === ideal.assetClass)
-            return Math.abs((current?.percentage ?? 0) - ideal.targetPct)
-        })
-
-        const avgMisalignment = diffs.reduce((a, b) => a + b, 0) / diffs.length
-        const alignmentScore = 100 - avgMisalignment
-
-        if (alignmentScore > 90) distribution.above90++
-        else if (alignmentScore >= 70) distribution.between90and70++
-        else if (alignmentScore >= 50) distribution.between70and50++
-        else distribution.below50++
-    })
-
-    const total = clients.length || 1
-
-    return [
-        { label: 'Superior a 90%', percentage: Math.round((distribution.above90 / total) * 100) },
-        { label: '90% a 70%', percentage: Math.round((distribution.between90and70 / total) * 100) },
-        { label: '70% a 50%', percentage: Math.round((distribution.between70and50 / total) * 100) },
-        { label: 'Inferior a 50%', percentage: Math.round((distribution.below50 / total) * 100) }
-    ]
 };
 
-export const getClientsPlanningSummary = async () => {
-    const clients = await prisma.client.findMany({
-        select: {
-            id: true,
-            wallets: { select: { percentage: true, assetClass: true } },
-            idealWallets: { select: { assetClass: true, targetPct: true } },
-        }
-    })
-
-    let totalAlignment = 0
-    let clientCount = clients.length
-
-    clients.forEach(client => {
-        if (client.idealWallets.length === 0) return
-
-        const diffs = client.idealWallets.map(ideal => {
-            const current = client.wallets.find(w => w.assetClass === ideal.assetClass)
-            return Math.abs((current?.percentage ?? 0) - ideal.targetPct)
-        })
-
-        const avgMisalignment = diffs.length ? diffs.reduce((a, b) => a + b, 0) / diffs.length : 0
-        const alignmentScore = 100 - avgMisalignment
-        totalAlignment += alignmentScore
-    })
-
-    const averageAlignment = clientCount > 0 ? totalAlignment / clientCount : 0
-
-    return {
-        percentage: Math.round(averageAlignment),
-        clientCount
-    }
-}
-export const getClientsTable = async (query: unknown) => {
-    const { page = 1, pageSize = 10 } = paginationSchema.parse(query)
-    const offset = (page - 1) * pageSize
-
-    const [clients, totalItems] = await Promise.all([
-        prisma.client.findMany({
-            skip: offset,
-            take: pageSize,
+export const getClientsPlanningDistribution = async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const clients = await prisma.client.findMany({
             select: {
-                id: true,
-                name: true,
-                netWorths: {
-                    orderBy: { date: 'desc' },
-                    take: 1,
-                    select: { value: true, date: true }
-                }
-            },
-            orderBy: { name: 'asc' }
-        }),
-        prisma.client.count()
-    ])
+                wallets: { select: { assetClass: true, percentage: true } },
+                idealWallets: { select: { assetClass: true, targetPct: true } }
+            }
+        });
 
+        let distribution = { above90: 0, between90and70: 0, between70and50: 0, below50: 0 };
 
-    return {
-        data: clients.map(c => ({
-            id: c.id,
-            name: c.name,
-            patrimony: c.netWorths[0]?.value ?? 0,
-            lastUpdate: c.netWorths[0]?.date ?? null
-        })),
-        meta: {
-            currentPage: page,
-            totalPages: Math.ceil(totalItems / pageSize),
-            itemsPerPage: pageSize,
-            totalItems
+        clients.forEach(client => {
+            if (client.idealWallets.length === 0) return;
+
+            const diffs = client.idealWallets.map(ideal => {
+                const current = client.wallets.find(w => w.assetClass === ideal.assetClass);
+                return Math.abs((current?.percentage ?? 0) - ideal.targetPct);
+            });
+
+            const avgMisalignment = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+            const alignmentScore = 100 - avgMisalignment;
+
+            if (alignmentScore > 90) distribution.above90++;
+            else if (alignmentScore >= 70) distribution.between90and70++;
+            else if (alignmentScore >= 50) distribution.between70and50++;
+            else distribution.below50++;
+        });
+
+        const total = clients.length || 1;
+        const responseData = [
+            { label: 'Superior a 90%', percentage: Math.round((distribution.above90 / total) * 100) },
+            { label: '90% a 70%', percentage: Math.round((distribution.between90and70 / total) * 100) },
+            { label: '70% a 50%', percentage: Math.round((distribution.between70and50 / total) * 100) },
+            { label: 'Inferior a 50%', percentage: Math.round((distribution.below50 / total) * 100) }
+        ];
+
+        return reply.code(200).send(responseData);
+    } catch (error) {
+        console.error("Erro ao calcular distribuição de planejamento:", error);
+        return reply.code(400).send({ message: 'Erro ao calcular distribuição de planejamento.' });
+    }
+};
+
+export const getClientsPlanningSummary = async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const clients = await prisma.client.findMany({
+            where: { idealWallets: { some: {} } },
+            select: {
+                wallets: { select: { percentage: true, assetClass: true } },
+                idealWallets: { select: { assetClass: true, targetPct: true } },
+            }
+        });
+
+        if (clients.length === 0) {
+            return reply.code(200).send({ percentage: 0, clientCount: 0 });
         }
+
+        let totalAlignment = 0;
+        clients.forEach(client => {
+            const diffs = client.idealWallets.map(ideal => {
+                const current = client.wallets.find(w => w.assetClass === ideal.assetClass);
+                return Math.abs((current?.percentage ?? 0) - ideal.targetPct);
+            });
+            const avgMisalignment = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+            totalAlignment += (100 - avgMisalignment);
+        });
+
+        const responseData = {
+            percentage: Math.round(totalAlignment / clients.length),
+            clientCount: clients.length
+        };
+
+        return reply.code(200).send(responseData);
+    } catch (error) {
+        console.error("Erro ao buscar resumo de planejamento:", error);
+        return reply.code(400).send({ message: 'Erro ao buscar resumo de planejamento.' });
     }
-}
+};
 
-export const getFamilyProfileSummary = async () => {
-    const totalClients = await prisma.client.count()
+export const getFamilyProfileSummary = async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const profiles = [
+            { label: "Com filho", dbValue: "with_children" },
+            { label: "Solteiro", dbValue: "single" },
+            { label: "Com dependentes", dbValue: "with_dependents" }
+        ];
 
-    if (totalClients === 0) {
-        return [
-            { label: "Com filho", percentage: 0 },
-            { label: "Solteiro", percentage: 0 },
-            { label: "Com dependentes", percentage: 0 }
-        ]
-    }
+        const totalClients = await prisma.client.count();
+        if (totalClients === 0) {
+            return reply.code(200).send(profiles.map(p => ({ ...p, percentage: 0 })));
+        }
 
-    const profiles = [
-        { label: "Com filho", dbValue: "with_children" },
-        { label: "Solteiro", dbValue: "single" },
-        { label: "Com dependentes", dbValue: "with_dependents" }
-    ]
+        const profileCounts = await prisma.client.groupBy({
+            by: ['familyProfile'],
+            _count: { _all: true },
+        });
 
-    const results = await Promise.all(
-        profiles.map(async ({ label, dbValue }) => {
-            const count = await prisma.client.count({
-                where: { familyProfile: dbValue as any }
-            })
+        const countsMap = new Map(profileCounts.map(p => [p.familyProfile, p._count._all]));
+
+        const responseData = profiles.map(({ label, dbValue }) => {
+            const count = countsMap.get(dbValue as any) ?? 0;
             return {
                 label,
                 percentage: Math.round((count / totalClients) * 100)
-            }
-        })
-    )
+            };
+        });
 
-    return results;
-}
-
+        return reply.code(200).send(responseData);
+    } catch (error) {
+        console.error("Erro ao buscar resumo de perfil familiar:", error);
+        return reply.code(400).send({ message: 'Erro ao buscar resumo de perfil familiar.' });
+    }
+};
