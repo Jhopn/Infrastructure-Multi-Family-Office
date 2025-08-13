@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from '../../connection/prisma';
 import { z } from 'zod';
-import { createGoalSchema, updateGoalSchema } from "./dto/goal.dto"; 
+import { createGoalSchema, updateGoalSchema } from "./dto/goal.dto";
 import { clientIdParamSchema, clientResourceParamsSchema } from "common/dto/param.dto";
 
 export const createGoal = async (request: FastifyRequest<{ Body: z.infer<typeof createGoalSchema>, Params: z.infer<typeof clientIdParamSchema> }>, reply: FastifyReply) => {
@@ -16,7 +16,7 @@ export const createGoal = async (request: FastifyRequest<{ Body: z.infer<typeof 
         const goal = await prisma.goal.create({
             data: {
                 ...request.body,
-                clientId: clientId, 
+                clientId: clientId,
             }
         });
 
@@ -97,3 +97,25 @@ export const deleteGoal = async (request: FastifyRequest<{ Params: z.infer<typeo
         return reply.code(400).send({ error: 'Error deleting goal.' });
     }
 }
+
+export const getFoblGoal = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { clientId } = request.params as { clientId: string };
+
+    try {
+        const foblGoal = await prisma.goal.findFirst({
+            where: {
+                clientId: clientId,
+                type: 'FOBL', 
+            },
+        });
+
+        if (!foblGoal) {
+            return reply.code(404).send({ message: 'Meta FOBL não encontrada para este cliente.' });
+        }
+
+        return reply.code(200).send(foblGoal);
+    } catch (error) {
+        console.error("Error geting goal:", error);
+        return reply.code(400).send({ error: 'Error geting goal.' });
+    }
+};

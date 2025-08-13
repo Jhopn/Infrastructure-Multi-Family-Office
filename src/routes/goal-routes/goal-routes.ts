@@ -47,6 +47,17 @@ const GoalRoutes: FastifyPluginAsync = async (fastify) => {
             security: [{ bearerAuth: [] }]
         }
     }, deleteGoal);
+
+    fastify.get('/clients/:clientId/goals/fobl', {
+        preHandler: authAccess(["advisor", "viewer"]),
+        schema: {
+            description: 'Get all goals for a specific client',
+            tags: ['Goals'],
+            params: clientIdParamSchema,
+            security: [{ bearerAuth: [] }]
+        }
+    }, getGoals);
+
 };
 
 export { GoalRoutes };
