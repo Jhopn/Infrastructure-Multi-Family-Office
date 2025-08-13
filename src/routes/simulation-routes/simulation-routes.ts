@@ -8,6 +8,7 @@ import {
 import { authAccess } from 'middlewares/auth-middleware';
 import { createSimulationSchema } from 'controllers/simulation-controller/dto/simulation.dto';
 import { clientIdParamSchema, clientResourceParamsSchema } from 'common/dto/param.dto';
+import { paginationSchema } from 'common/dto/pagination.dto';
 
 const SimulationRoutes: FastifyPluginAsync = async (fastify) => {
 
@@ -22,15 +23,16 @@ const SimulationRoutes: FastifyPluginAsync = async (fastify) => {
         }
     }, createSimulation);
 
-    fastify.get('/clients/:clientId/simulations', {
-        preHandler: authAccess(["advisor", "viewer"]),
-        schema: {
-            description: 'Get all simulations for a specific client',
-            tags: ['Simulations'],
-            params: clientIdParamSchema,
-            security: [{ bearerAuth: [] }]
-        }
-    }, getSimulations);
+   fastify.get('/clients/:clientId/simulations', {
+    preHandler: authAccess(["advisor", "viewer"]),
+    schema: {
+        description: 'Get all simulations for a specific client, with pagination.',
+        tags: ['Simulations'],
+        params: clientIdParamSchema,
+        querystring: paginationSchema, 
+        security: [{ bearerAuth: [] }]
+    }
+}, getSimulations);
 
     fastify.get('/clients/:clientId/simulations/:outherId/data', {
         preHandler: authAccess(["advisor", "viewer"]),

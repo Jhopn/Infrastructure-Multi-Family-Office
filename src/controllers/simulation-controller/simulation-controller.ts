@@ -3,6 +3,7 @@ import { prisma } from '../../connection/prisma';
 import { z } from 'zod';
 import { createSimulationSchema } from "./dto/simulation.dto";
 import { clientIdParamSchema, clientResourceParamsSchema } from "common/dto/param.dto";
+import { paginationSchema } from "common/dto/pagination.dto";
 
 function calculateProjection(initialValue: number, monthlyContribution: number, rate: number, years: number) {
     const dataPoints = [];
@@ -48,15 +49,37 @@ export const createSimulation = async (request: FastifyRequest<{ Body: z.infer<t
     }
 }
 
-export const getSimulations = async (request: FastifyRequest<{ Params: z.infer<typeof clientIdParamSchema> }>, reply: FastifyReply) => {
+export const getSimulations = async (request: FastifyRequest<{   Params: z.infer<typeof clientIdParamSchema>,Querystring: z.infer<typeof paginationSchema>}>, 
+    reply: FastifyReply
+) => {
     try {
         const { clientId } = request.params;
-        const simulations = await prisma.simulation.findMany({
-            where: { clientId },
-            select: { id: true, label: true, rate: true, startDate: true, createdAt: true },
-            orderBy: { createdAt: 'desc' }
-        });
-        return reply.code(200).send(simulations);
+        const { page, pageSize } = request.query;
+
+        const offset = (page - 1) * pageSize;
+
+
+        const [simulations, totalItems] = await prisma.$transaction([
+            prisma.simulation.findMany({
+                where: { clientId },
+                select: { id: true, label: true, rate: true, startDate: true, createdAt: true },
+                orderBy: { createdAt: 'desc' },
+                skip: offset,
+                take: pageSize,
+            }),
+            prisma.simulation.count({
+                where: { clientId },
+            })
+        ]);
+
+        const responseData = {
+            simulations: simulations, 
+            currentPage: page,
+            totalPages: Math.ceil(totalItems / pageSize),
+        };
+
+        return reply.code(200).send(responseData);
+
     } catch (error) {
         console.error("Error fetching simulations:", error);
         return reply.code(400).send({ error: 'Error fetching simulations.' });
