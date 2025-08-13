@@ -8,7 +8,8 @@ import {
     getClientsPlanningDistribution,
     getClientsPlanningSummary,
     getClientsTable,
-    getFamilyProfileSummary
+    getFamilyProfileSummary,
+    getClientsIdName
 } from 'controllers/client-controller/client-controllers';
 import { authAccess } from 'middlewares/auth-middleware';
 import { createClientSchema, updateClientSchema } from 'controllers/client-controller/dto/client.dto';
@@ -103,6 +104,15 @@ const ClientRoutes: FastifyPluginAsync = async (fastify) => {
             security: [{ bearerAuth: [] }]
         }
     }, getFamilyProfileSummary)
+
+    fastify.get('/clients/id-name', {
+        preHandler: authAccess(["advisor", "viewer"]),
+        schema: {
+            description: 'Get list of clients with only id and name',
+            tags: ['Clients'],
+            security: [{ bearerAuth: [] }]
+        }
+    }, getClientsIdName)
 
 };
 

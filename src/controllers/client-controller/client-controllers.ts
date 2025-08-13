@@ -237,3 +237,20 @@ export const getFamilyProfileSummary = async (request: FastifyRequest, reply: Fa
         return reply.code(400).send({ message: 'Erro ao buscar resumo de perfil familiar.' });
     }
 };
+
+export const getClientsIdName = async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const clients = await prisma.client.findMany({
+            select: {
+                id: true,
+                name: true
+            },
+            orderBy: { name: 'asc' }
+        });
+
+        return reply.code(200).send(clients);
+    } catch (error) {
+        console.error("Erro ao buscar lista de clientes (id e name):", error);
+        return reply.code(400).send({ message: 'Erro ao buscar lista de clientes.' });
+    }
+};
