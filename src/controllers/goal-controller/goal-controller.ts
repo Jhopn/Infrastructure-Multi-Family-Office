@@ -3,29 +3,54 @@ import { prisma } from '../../connection/prisma';
 import { z } from 'zod';
 import { createGoalSchema, updateGoalSchema } from "./dto/goal.dto";
 import { clientIdParamSchema, clientResourceParamsSchema } from "common/dto/param.dto";
+import { GoalType } from '@prisma/client';
 
 export const createGoal = async (request: FastifyRequest<{ Body: z.infer<typeof createGoalSchema>, Params: z.infer<typeof clientIdParamSchema> }>, reply: FastifyReply) => {
-    try {
-        const { clientId } = request.params;
+  try {
+    const { clientId } = request.params;
+    const { type, targetValue, targetDate, subtype, version } = request.body;
 
-        const client = await prisma.client.findUnique({ where: { id: clientId } });
-        if (!client) {
-            return reply.code(404).send({ error: 'Client not found.' });
-        }
-
-        const goal = await prisma.goal.create({
-            data: {
-                ...request.body,
-                clientId: clientId,
-            }
-        });
-
-        return reply.code(201).send(goal);
-    } catch (error) {
-        console.error("Error creating goal:", error);
-        return reply.code(400).send({ error: 'Error creating goal.' });
+    const client = await prisma.client.findUnique({ where: { id: clientId } });
+    if (!client) {
+      return reply.code(404).send({ error: 'Client not found.' });
     }
-}
+
+    const existingGoal = await prisma.goal.findFirst({
+      where: { clientId, type }
+    });
+
+    let goal;
+    if (existingGoal) {
+      goal = await prisma.goal.update({
+        where: { id: existingGoal.id },
+        data: {
+          targetValue,
+          targetDate,
+          subtype,
+          version
+        }
+      });
+    } else {
+      goal = await prisma.goal.create({
+        data: {
+          clientId,
+          type,
+          subtype,
+          targetValue,
+          targetDate,
+          version
+        }
+      });
+    }
+
+    return reply.code(existingGoal ? 200 : 201).send(goal);
+
+  } catch (error) {
+    console.error("Error creating/updating goal:", error);
+    return reply.code(400).send({ error: 'Error creating/updating goal.' });
+  }
+};
+
 
 export const getGoals = async (request: FastifyRequest<{ Params: z.infer<typeof clientIdParamSchema> }>, reply: FastifyReply) => {
     try {
@@ -98,24 +123,28 @@ export const deleteGoal = async (request: FastifyRequest<{ Params: z.infer<typeo
     }
 }
 
-export const getFoblGoal = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { clientId } = request.params as { clientId: string };
+export const getGoalByType = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { clientId, type } = request.params as { clientId: string; type: string };
+
+    if (!Object.values(GoalType).includes(type as GoalType)) {
+        return reply.code(400).send({ message: 'Tipo de meta inválido.' });
+    }
 
     try {
-        const foblGoal = await prisma.goal.findFirst({
+        const goal = await prisma.goal.findFirst({
             where: {
-                clientId: clientId,
-                type: 'FOBL', 
+                clientId,
+                type: type as GoalType, 
             },
         });
 
-        if (!foblGoal) {
-            return reply.code(404).send({ message: 'Meta FOBL não encontrada para este cliente.' });
+        if (!goal) {
+            return reply.code(404).send({ message: `Meta do tipo ${type} não encontrada para este cliente.` });
         }
 
-        return reply.code(200).send(foblGoal);
+        return reply.code(200).send(goal);
     } catch (error) {
-        console.error("Error geting goal:", error);
-        return reply.code(400).send({ error: 'Error geting goal.' });
+        console.error("Erro ao buscar meta:", error);
+        return reply.code(400).send({ error: 'Erro ao buscar meta.' });
     }
 };

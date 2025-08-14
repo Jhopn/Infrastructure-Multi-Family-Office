@@ -1,8 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { createGoal, getGoals, updateGoal, deleteGoal } from 'controllers/goal-controller/goal-controller';
+import { createGoal, getGoals, updateGoal, deleteGoal, getGoalByType } from 'controllers/goal-controller/goal-controller';
 import { authAccess } from 'middlewares/auth-middleware';
 import { createGoalSchema, updateGoalSchema } from 'controllers/goal-controller/dto/goal.dto';
 import { clientIdParamSchema, clientResourceParamsSchema } from 'common/dto/param.dto';
+import z from 'zod';
 
 const GoalRoutes: FastifyPluginAsync = async (fastify) => {
 
@@ -48,15 +49,19 @@ const GoalRoutes: FastifyPluginAsync = async (fastify) => {
         }
     }, deleteGoal);
 
-    fastify.get('/clients/:clientId/goals/fobl', {
+    fastify.get('/clients/:clientId/goals/:type', {
         preHandler: authAccess(["advisor", "viewer"]),
         schema: {
-            description: 'Get all goals for a specific client',
+            description: 'Get a goal by type for a specific client',
             tags: ['Goals'],
-            params: clientIdParamSchema,
+            params: z.object({
+                clientId: z.string(),
+                type: z.enum(["Rendimento", "Sports", "FOBL"])
+            }),
             security: [{ bearerAuth: [] }]
         }
-    }, getGoals);
+    }, getGoalByType);
+
 
 };
 

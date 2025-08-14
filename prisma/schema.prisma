@@ -13,6 +13,12 @@ enum Frequency {
   annual
 }
 
+enum GoalType {
+  Performance
+  Sports
+  FOBL
+}
+
 enum FamilyProfile {
   conservative
   moderate
@@ -52,7 +58,7 @@ model Client {
 model Goal {
   id          String   @id @default(uuid())
   clientId    String
-  type        String
+  type        GoalType
   subtype     String?
   targetValue Float
   targetDate  DateTime
